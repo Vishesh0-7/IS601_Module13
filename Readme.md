@@ -139,7 +139,9 @@ Workflow file: `.github/workflows/ci.yml`.
 
 ## License
 
-No license specified yet. If you plan to share or reuse, consider adding a LICENSE file (e.g., MIT).
+This project is licensed under the MIT License.
+
+See the LICENSE file for details.
 
 
 ## Acknowledgements
