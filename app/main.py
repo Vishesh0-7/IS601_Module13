@@ -8,6 +8,8 @@ import logging, time
 from app import operations as ops
 from app import crud, schemas
 from app.database import get_db, Base, engine
+from app.routes_users import router as users_router
+from app.routes_calculations import router as calculations_router
 
 # ----- Logging setup -----
 logging.basicConfig(
@@ -17,6 +19,10 @@ logging.basicConfig(
 log = logging.getLogger("calculator")
 
 app = FastAPI(title="FastAPI Calculator", version="1.0.0")
+
+# Include routers
+app.include_router(users_router)
+app.include_router(calculations_router)
 
 # Create database tables on startup
 @app.on_event("startup")

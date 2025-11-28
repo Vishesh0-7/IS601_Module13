@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app import models, schemas
 from app.factory import OperationFactory
+from app.security import hash_password
 
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
-    """Create a new user."""
-    # In production, hash the password properly
-    hashed_password = f"hashed_{user.password}"
+    """Create a new user with hashed password."""
+    hashed_password = hash_password(user.password)
     db_user = models.User(
         email=user.email,
         username=user.username,
@@ -28,6 +28,11 @@ def get_user(db: Session, user_id: int) -> Optional[models.User]:
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
     """Get user by email."""
     return db.query(models.User).filter(models.User.email == email).first()
+
+
+def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
+    """Get user by username."""
+    return db.query(models.User).filter(models.User.username == username).first()
 
 
 def create_calculation(
@@ -121,3 +126,63 @@ def list_user_calculations(
     return db.query(models.Calculation).filter(
         models.Calculation.user_id == user_id
     ).offset(skip).limit(limit).all()
+
+
+def update_calculation(
+    db: Session,
+    calculation_id: int,
+    calc_in: schemas.CalculationCreate
+) -> Optional[models.Calculation]:
+    """
+    Update an existing calculation.
+    
+    Args:
+        db: Database session
+        calculation_id: ID of calculation to update
+        calc_in: New calculation data
+        
+    Returns:
+        Updated Calculation model instance or None if not found
+        
+    Raises:
+        ZeroDivisionError: If dividing by zero
+        ValueError: If operation type is invalid
+    """
+    # Get existing calculation
+    db_calculation = get_calculation(db, calculation_id)
+    if db_calculation is None:
+        return None
+    
+    # Recompute result using factory
+    operation = OperationFactory.create(calc_in.type)
+    result = operation.compute(calc_in.a, calc_in.b)
+    
+    # Update fields
+    db_calculation.a = calc_in.a
+    db_calculation.b = calc_in.b
+    db_calculation.type = calc_in.type
+    db_calculation.result = result
+    
+    db.commit()
+    db.refresh(db_calculation)
+    return db_calculation
+
+
+def delete_calculation(db: Session, calculation_id: int) -> bool:
+    """
+    Delete a calculation by ID.
+    
+    Args:
+        db: Database session
+        calculation_id: ID of calculation to delete
+        
+    Returns:
+        True if deleted, False if not found
+    """
+    db_calculation = get_calculation(db, calculation_id)
+    if db_calculation is None:
+        return False
+    
+    db.delete(db_calculation)
+    db.commit()
+    return True

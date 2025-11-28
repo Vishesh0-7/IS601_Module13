@@ -45,3 +45,9 @@ class UserRead(BaseModel):
     email: str
     username: str
     is_active: int
+
+
+class UserLogin(BaseModel):
+    """Schema for user login."""
+    username_or_email: str
+    password: str
