@@ -47,6 +47,9 @@ services:
     environment:
       DATABASE_URL: postgresql://calculator_user:calculator_pass@db:5432/calculator_db
       PYTHONPATH: /app
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-30}
     ports:
       - "8000:8000"
     volumes:
@@ -70,6 +73,9 @@ services:
     environment:
       DATABASE_URL: postgresql://calculator_user:calculator_pass@db:5432/calculator_test_db
       PYTHONPATH: /app
+      JWT_SECRET_KEY: test-secret-key
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: 30
     volumes:
       - .:/app
       - /app/.venv

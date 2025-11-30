@@ -113,5 +113,9 @@ node_modules/
 # Misc
 *.sqlite3
 *.sqlite
+*.db
 .pytest_cache/
 .env
+
+# Test databases
+test*.db

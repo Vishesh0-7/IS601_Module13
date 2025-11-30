@@ -1,4 +1,0 @@
-{
-  "tests/e2e/test_e2e_playwright.py::test_ui_addition": true,
-  "tests/e2e/test_e2e_playwright.py::test_ui_div_by_zero": true
-}

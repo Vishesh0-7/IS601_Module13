@@ -2,6 +2,7 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import logging, time
@@ -10,6 +11,7 @@ from app import crud, schemas
 from app.database import get_db, Base, engine
 from app.routes_users import router as users_router
 from app.routes_calculations import router as calculations_router
+from app.routes_auth import router as auth_router
 
 # ----- Logging setup -----
 logging.basicConfig(
@@ -20,7 +22,17 @@ log = logging.getLogger("calculator")
 
 app = FastAPI(title="FastAPI Calculator", version="1.0.0")
 
+# Enable CORS for frontend pages
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify exact origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include routers
+app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(calculations_router)
 
@@ -33,6 +45,12 @@ def startup_event():
 
 # Static UI
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Mount frontend pages
+import os
+frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
+if os.path.exists(frontend_dir):
+    app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 
 # Request logging middleware
 @app.middleware("http")
@@ -50,7 +68,8 @@ async def log_requests(request: Request, call_next):
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    with open("app/static/index.html", "r", encoding="utf-8") as f:
+    """Landing page - shows login/register or redirects to calculator if authenticated."""
+    with open("frontend/index.html", "r", encoding="utf-8") as f:
         return f.read()
 
 @app.get("/health")
@@ -86,66 +105,3 @@ def calc(op: str, a: float, b: float):
         return {"op": op, "result": funcs[op](a, b)}
     except ZeroDivisionError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-# ========== Database-Backed Calculation Endpoints ==========
-
-@app.post("/calculations/", response_model=schemas.CalculationRead, status_code=201)
-def create_calculation(
-    calculation: schemas.CalculationCreate,
-    user_id: Optional[int] = None,
-    db: Session = Depends(get_db)
-):
-    """
-    Create a new calculation and store it in the database.
-    
-    - **a**: First number
-    - **b**: Second number
-    - **type**: Operation type (Add, Sub, Multiply, Divide)
-    - **user_id**: Optional user ID (query parameter)
-    """
-    try:
-        return crud.create_calculation(db, calculation, user_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except ZeroDivisionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.get("/calculations/", response_model=List[schemas.CalculationRead])
-def list_calculations(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    """
-    Get all calculations from the database.
-    
-    - **skip**: Number of records to skip (default: 0)
-    - **limit**: Maximum records to return (default: 100)
-    """
-    return crud.list_calculations(db, skip=skip, limit=limit)
-
-
-@app.get("/calculations/{calculation_id}", response_model=schemas.CalculationRead)
-def get_calculation(calculation_id: int, db: Session = Depends(get_db)):
-    """
-    Get a specific calculation by ID.
-    """
-    calculation = crud.get_calculation(db, calculation_id)
-    if calculation is None:
-        raise HTTPException(status_code=404, detail="Calculation not found")
-    return calculation
-
-
-@app.get("/users/{user_id}/calculations/", response_model=List[schemas.CalculationRead])
-def get_user_calculations(
-    user_id: int,
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    """
-    Get all calculations for a specific user.
-    """
-    return crud.list_user_calculations(db, user_id, skip=skip, limit=limit)

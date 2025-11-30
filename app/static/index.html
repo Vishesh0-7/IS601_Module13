@@ -9,10 +9,20 @@
     input, select, button { padding: .5rem; margin-right: .5rem; }
     #result { font-weight: 700; margin-top: 1rem; }
     .row { margin-bottom: .75rem; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .user-info { font-size: 0.9rem; color: #666; }
+    .logout-btn { padding: .5rem 1rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .logout-btn:hover { background: #c82333; }
   </style>
 </head>
 <body>
-  <h1>FastAPI Calculator</h1>
+  <div class="header">
+    <h1>FastAPI Calculator</h1>
+    <div>
+      <span class="user-info" id="userInfo"></span>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+  </div>
   <div class="row">
     <label>A <input id="a" type="number" value="3" step="any"></label>
     <label>B <input id="b" type="number" value="2" step="any"></label>
@@ -31,6 +41,24 @@
   <script>
     const $ = (id) => document.getElementById(id);
     
+    // Check if user is logged in
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      // Redirect to landing page if not logged in
+      window.location.href = '/';
+    }
+    
+    // Show user info (you can decode JWT to get username)
+    if (token) {
+      $("userInfo").textContent = "Logged in";
+    }
+    
+    // Logout functionality
+    $("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem('access_token');
+      window.location.href = '/';
+    });
+    
     // Map operation names to the format expected by the API
     const opMap = {
       'add': 'Add',
@@ -45,9 +73,14 @@
       const bValue = parseFloat($("b").value);
       
       // Create calculation in database using POST /calculations/
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const res = await fetch('/calculations/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({
           a: aValue,
           b: bValue,

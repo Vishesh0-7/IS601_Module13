@@ -24,3 +24,33 @@ def div(a: float, b: float) -> float:
     res = a / b
     log.debug("div(%s, %s)=%s", a, b, res)
     return res
+
+
+def compute(a: float, b: float, operation_type: str) -> float:
+    """
+    Compute the result of an operation.
+    
+    Args:
+        a: First operand
+        b: Second operand
+        operation_type: Type of operation (Add, Sub, Multiply, Divide)
+        
+    Returns:
+        Result of the computation
+        
+    Raises:
+        ValueError: If operation_type is invalid
+        ZeroDivisionError: If dividing by zero
+    """
+    operation_map = {
+        "Add": add,
+        "Sub": sub,
+        "Multiply": mul,
+        "Divide": div
+    }
+    
+    operation_func = operation_map.get(operation_type)
+    if operation_func is None:
+        raise ValueError(f"Invalid operation type: {operation_type}")
+    
+    return operation_func(a, b)

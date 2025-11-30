@@ -1,8 +1,7 @@
 """CRUD operations for database models."""
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app import models, schemas
-from app.factory import OperationFactory
+from app import models, schemas, operations
 from app.security import hash_password
 
 
@@ -55,9 +54,8 @@ def create_calculation(
         ZeroDivisionError: If dividing by zero
         ValueError: If operation type is invalid
     """
-    # Use factory to compute the result
-    operation = OperationFactory.create(calc_in.type)
-    result = operation.compute(calc_in.a, calc_in.b)
+    # Compute the result using operations module
+    result = operations.compute(calc_in.a, calc_in.b, calc_in.type)
     
     # Create database record
     db_calculation = models.Calculation(
@@ -153,9 +151,8 @@ def update_calculation(
     if db_calculation is None:
         return None
     
-    # Recompute result using factory
-    operation = OperationFactory.create(calc_in.type)
-    result = operation.compute(calc_in.a, calc_in.b)
+    # Recompute result
+    result = operations.compute(calc_in.a, calc_in.b, calc_in.type)
     
     # Update fields
     db_calculation.a = calc_in.a

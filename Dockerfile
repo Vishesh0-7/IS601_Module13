@@ -46,6 +46,7 @@ FROM base as production
 
 # Copy only application code (no tests, no dev files)
 COPY app ./app
+COPY frontend ./frontend
 COPY pytest.ini .
 
 # Create non-root user for security
