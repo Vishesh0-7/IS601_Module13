@@ -11,7 +11,7 @@
 A professional RESTful API built with FastAPI featuring JWT authentication, calculation history tracking, and a modern responsive web interface.
 
 **🔗 Links:**  
-📦 [Docker Hub](https://hub.docker.com/r/vishy211/is601_module12) | 💻 [GitHub Repository](https://github.com/Vishesh0-7/IS601_Module12)
+📦 [Docker Hub](https://hub.docker.com/r/vishy211/is601_module13) | 💻 [GitHub Repository](https://github.com/Vishesh0-7/IS601_Module12)
 
 ---
 
